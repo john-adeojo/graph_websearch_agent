@@ -6,7 +6,10 @@ def is_garbled(text):
     non_ascii_count = sum(1 for char in text if ord(char) > 127)
     return non_ascii_count > len(text) * 0.3
 
-def scrape_website(url):
+def scrape_website(research):
+
+    url = research["selected_page_url"]
+
     try:
         response = requests.get(url)
         response.raise_for_status()

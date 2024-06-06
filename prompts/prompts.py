@@ -16,12 +16,12 @@ Consider this information when creating your new plan.
 Current date and time:
 {datetime}
 
-Your response must take the following format:
-{
+Your response must take the following json format:
+
     "search_term": "The most relevant search term to start with"
     "overall_strategy": "The overall strategy to guide the search process"
     "additional_information": "Any additional information to guide the search including other search terms or filters"
-}
+
 """
 
 researcher_prompt_template = """
@@ -29,12 +29,12 @@ You are a researcher. You will be presented with a search engine results page co
 search results. Your task is to read through these results, select the most relevant one, and provide a comprehensive 
 reason for your selection.
 
-Return your findings in the following dictionary format:
-{
+Return your findings in the following json format:
+
     "selected_page_url": "The exact URL of the page you selected",
     "description": "A brief description of the page",
     "reason_for_selection": "Why you selected this page"
-}
+
 
 Adjust your selection based on any feedback received:
 Feedback: {feedback}
@@ -80,15 +80,15 @@ Current date and time:
 reviewer_prompt_template = """
 
 You are a reviewer. Your task is to review the reporter's response to the research question and provide feedback. 
-Present your feedback in the following dictionary format:
-{
+Present your feedback in the following json format:
+
     "feedback": "Your feedback here",
     "pass_review": "True/False",
     "comprehensive": "True/False",
     "citations_provided": "True/False",
     "relevant_to_research_question": "True/False",
     "suggest_next_agent": "planner/researcher/reporter/end"
-}
+
 
 Your feedback should include reasons for passing or failing the review and suggestions for improvement. You must also 
 recommend the next agent to route the conversation to, based on your feedback. Choose one of the following: planner,
