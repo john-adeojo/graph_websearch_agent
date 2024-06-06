@@ -17,7 +17,7 @@ class AgentGraphState(TypedDict):
     reviewer_response: Annotated[list, add_messages]
     serper_response: Annotated[list, add_messages]
     scraper_response: Annotated[list, add_messages]
-    end_chain: str
+    end_chain: Annotated[list, add_messages]
 
 # Define the nodes in the agent graph
 def get_agent_graph_state(state:AgentGraphState, state_key:str):
@@ -73,14 +73,13 @@ def get_agent_graph_state(state:AgentGraphState, state_key:str):
         return None
     
 state = {
-    "planner_response": [], 
-    "researcher_response": [], 
-    "reporter_response": [], 
-    "reviewer_response": [], 
+    "planner_response": [],
     "researcher_response": [],
+    "reporter_response": [],
+    "reviewer_response": [],
     "serper_response": [],
     "scraper_response": [],
-    "end_chain": []
+    "end_chain": ""
 }
 
 graph = StateGraph(AgentGraphState)
@@ -145,7 +144,7 @@ graph.add_node(
     )}
 )
 
-graph.add_node("end", lambda state: {"end_chain": "end"})
+graph.add_node("end", lambda state: {"end_chain": add_messages("end")})
 
 
 # Define the edges in the agent graph
