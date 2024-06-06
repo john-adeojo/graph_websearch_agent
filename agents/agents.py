@@ -9,7 +9,9 @@ from prompts.prompts import (
 )
 from utils.helper_functions import get_current_utc_datetime
 
+
 model = 'gpt-4o'
+
 def planner_agent(prompt=planner_prompt_template, llm=get_open_ai_json(model=model), feedback=None, previous_plans=None):
 
     planner_prompt = prompt.format(
@@ -24,13 +26,15 @@ def planner_agent(prompt=planner_prompt_template, llm=get_open_ai_json(model=mod
     ]
 
     ai_msg = llm.invoke(messages)
-    return ai_msg
 
-def researcher_agent(prompt=researcher_prompt_template, llm=get_open_ai_json(model=model), feedback=None, previous_selections=None):
+    return ai_msg.content
+
+def researcher_agent(prompt=researcher_prompt_template, llm=get_open_ai_json(model=model), feedback=None, previous_selections=None, serp=None):
 
     researcher_prompt = prompt.format(
         feedback=feedback,
         previous_research=previous_selections,
+        serp=serp,
         datetime=get_current_utc_datetime()
     )
     messages = [
@@ -39,14 +43,17 @@ def researcher_agent(prompt=researcher_prompt_template, llm=get_open_ai_json(mod
     ]
 
     ai_msg = llm.invoke(messages)
-    return ai_msg
 
-def reporter_agent(prompt=reporter_prompt_template, llm=get_open_ai(model=model), feedback=None, previous_reports=None):
+
+    return ai_msg.content
+
+def reporter_agent(prompt=reporter_prompt_template, llm=get_open_ai(model=model), feedback=None, previous_reports=None, research=None):
 
     reporter_prompt = prompt.format(
         feedback=feedback,
         previous_reports=previous_reports,
-        datetime=get_current_utc_datetime()
+        datetime=get_current_utc_datetime(),
+        research=research
     )
     messages = [
         ("system", reporter_prompt),
@@ -54,7 +61,7 @@ def reporter_agent(prompt=reporter_prompt_template, llm=get_open_ai(model=model)
     ]
 
     ai_msg = llm.invoke(messages)
-    return ai_msg
+    return ai_msg.content
 
 def reviewer_agent(
         prompt=reviewer_prompt_template, 
@@ -67,7 +74,7 @@ def reviewer_agent(
         reporter_agent=None,
           feedback=None):
 
-    reviewer_prompt = reviewer_prompt_template.format(
+    reviewer_prompt = prompt.format(
         planner = planner,
         researcher=researcher,
         reporter=reporter,
@@ -83,7 +90,8 @@ def reviewer_agent(
     ]
 
     ai_msg = llm.invoke(messages)
-    return ai_msg
+
+    return ai_msg.content
 
 
 

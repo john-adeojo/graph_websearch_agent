@@ -1,4 +1,5 @@
 import ast
+from langchain_core.runnables import RunnableLambda
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, Annotated
 from langgraph.graph.message import add_messages
@@ -14,100 +15,142 @@ class AgentGraphState(TypedDict):
     researcher_response: Annotated[list, add_messages]
     reporter_response: Annotated[list, add_messages]
     reviewer_response: Annotated[list, add_messages]
-    researcher_response: Annotated[list, add_messages]
+    serper_response: Annotated[list, add_messages]
+    scraper_response: Annotated[list, add_messages]
+    end_chain: str
 
 # Define the nodes in the agent graph
-graph = StateGraph(AgentGraphState)
-
-def get_agent_graph_state(state:AgentGraphState, agent:str):
-    if agent == "planner_all":
+def get_agent_graph_state(state:AgentGraphState, state_key:str):
+    if state_key == "planner_all":
         return state["planner_response"]
-    elif agent == "planner_latest":
+    elif state_key == "planner_latest":
         if state["planner_response"]:
             return state["planner_response"][-1]
         else:
             return state["planner_response"]
     
-    elif agent == "researcher_all":
+    elif state_key == "researcher_all":
         return state["researcher_response"]
-    elif agent == "researcher_latest":
+    elif state_key == "researcher_latest":
         if state["researcher_response"]:
             return state["researcher_response"][-1]
         else:
             return state["researcher_response"]
     
-    elif agent == "reporter_all":
+    elif state_key == "reporter_all":
         return state["reporter_response"]
-    elif agent == "reporter_latest":
+    elif state_key == "reporter_latest":
         if state["reporter_response"]:
             return state["reporter_response"][-1]
         else:
             return state["reporter_response"]
     
-    elif agent == "reviewer_all":
+    elif state_key == "reviewer_all":
         return state["reviewer_response"]
-    elif agent == "reviewer_latest":
+    elif state_key == "reviewer_latest":
         if state["reviewer_response"]:
             return state["reviewer_response"][-1]
         else:
             return state["reviewer_response"]
+        
+    elif state_key == "serper_all":
+        return state["serper_response"]
+    elif state_key == "serper_latest":
+        if state["serper_response"]:
+            return state["serper_response"][-1]
+        else:
+            return state["serper_response"]
+    
+    elif state_key == "scraper_all":
+        return state["scraper_response"]
+    elif state_key == "scraper_latest":
+        if state["scraper_response"]:
+            return state["scraper_response"][-1]
+        else:
+            return state["scraper_response"]
+        
     else:
         return None
     
-state = {"planner_response": [], "researcher_response": [], "reporter_response": [], "reviewer_response": [], "researcher_response": []}
-    
+state = {
+    "planner_response": [], 
+    "researcher_response": [], 
+    "reporter_response": [], 
+    "reviewer_response": [], 
+    "researcher_response": [],
+    "serper_response": [],
+    "scraper_response": [],
+    "end_chain": []
+}
+
+graph = StateGraph(AgentGraphState)
+   
 graph.add_node(
     "planner", 
-    planner_agent(
-        feedback=get_agent_graph_state(state=state, agent="reviewer_latest"),
-        previous_plans=get_agent_graph_state(state=state, agent="planner_all")
-    )
+    lambda state: {"planner_response": add_messages(
+        planner_agent(
+        feedback=lambda: get_agent_graph_state(state=state, state_key="reviewer_latest"),
+        previous_plans=lambda: get_agent_graph_state(state=state, state_key="planner_all")
+        )
+    )}
 )
 graph.add_node(
     "researcher",
-    researcher_agent(
-        feedback=get_agent_graph_state(state=state, agent="reviewer_latest"),
-        previous_selections=get_agent_graph_state(state=state, agent="researcher_all")
-    )
+    lambda state: {"researcher_response": add_messages(
+        researcher_agent(
+        feedback=lambda: get_agent_graph_state(state=state, state_key="reviewer_latest"),
+        previous_selections=lambda: get_agent_graph_state(state=state, state_key="researcher_all"),
+        serp=lambda: get_agent_graph_state(state=state, state_key="serper_latest")
+        )
+    )}
 )
 graph.add_node(
     "reporter", 
-    reporter_agent(
-        feedback=get_agent_graph_state(state=state, agent="reviewer_latest"),
-        previous_reports=get_agent_graph_state(state=state, agent="reporter_all")
-    )
+    lambda state: {"reporter_response": add_messages(
+        reporter_agent(
+        feedback=lambda: get_agent_graph_state(state=state, state_key="reviewer_latest"),
+        previous_reports=lambda: get_agent_graph_state(state=state, state_key="reporter_all"),
+        research=lambda: get_agent_graph_state(state=state, state_key="researcher_latest")
+        )
+    )}
 )
 
 graph.add_node(
     "reviewer", 
-    reviewer_agent(
-        feedback=get_agent_graph_state(state=state, agent="reviewer_all"),
-        planner=get_agent_graph_state(state=state, agent="planner_latest"),
-        researcher=get_agent_graph_state(state=state, agent="researcher_latest"),
-        reporter=get_agent_graph_state(state=state, agent="reporter_latest")
-    )
+    lambda state: {"reviewer_response": add_messages(
+        reviewer_agent(
+        feedback=lambda: get_agent_graph_state(state=state, state_key="reviewer_all"),
+        planner=lambda: get_agent_graph_state(state=state, state_key="planner_latest"),
+        researcher=lambda: get_agent_graph_state(state=state, state_key="researcher_latest"),
+        reporter=lambda: get_agent_graph_state(state=state, state_key="reporter_latest")
+        )
+    )}
 )
 
 graph.add_node(
     "serper_tool",
-    get_google_serper(
-        plan=get_agent_graph_state(state=state, agent="planner_latest") 
-    )
+    lambda state: {"serper_response": add_messages( 
+        get_google_serper(
+        plan=lambda: get_agent_graph_state(state=state, state_key="planner_latest")
+        )
+    )}
 )
 
 graph.add_node(
     "scraper_tool",
-    scrape_website(
-        get_agent_graph_state(state=state, agent="researcher_latest") 
-    )
+    lambda state: {"scraper_response": add_messages(
+        scrape_website(
+        research=lambda: get_agent_graph_state(state=state, state_key="researcher_latest")
+        )
+    )}
 )
 
-graph.add_node("end", END)
+graph.add_node("end", lambda state: {"end_chain": "end"})
 
 
 # Define the edges in the agent graph
-def pass_review(state:AgentGraphState, llm=get_open_ai_json):
-    review_list =  state["reviewer"]
+def pass_review(state: AgentGraphState, llm=get_open_ai_json):
+    review_list =  state["reviewer_response"]
     if review_list:
         review = review_list[-1]
     else:
@@ -163,7 +206,7 @@ graph.add_edge("reporter", "reviewer")
 
 graph.add_conditional_edges(
     "reviewer",
-    pass_review(state=state),
+    pass_review,
 
 )
 

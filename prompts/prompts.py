@@ -29,6 +29,9 @@ You are a researcher. You will be presented with a search engine results page co
 search results. Your task is to read through these results, select the most relevant one, and provide a comprehensive 
 reason for your selection.
 
+here is the search engine results page:
+{serp}
+
 Return your findings in the following json format:
 
     "selected_page_url": "The exact URL of the page you selected",
