@@ -1,7 +1,9 @@
 from agent_graph.graph import create_graph, compile_workflow
 
+print ("Creating graph and compiling workflow...")
 graph = create_graph()
 workflow = compile_workflow(graph)
+print ("Graph and workflow created.")
 
 
 if __name__ == "__main__":
@@ -14,13 +16,24 @@ if __name__ == "__main__":
             break
 
         dict_inputs = {"research_question": query}
-        
         thread = {"configurable": {"thread_id": "4"}}
-        for event in workflow.stream(dict_inputs, thread, stream_mode="values"):
+        limit = {"recursion_limit": 40}
+
+        # for event in workflow.stream(
+        #     dict_inputs, thread, limit, stream_mode="values"
+        #     ):
+        #     if verbose:
+        #         print("\nState Dictionary:", event)
+        #     else:
+        #         print("\n")
+
+        for event in workflow.stream(
+            dict_inputs, limit
+            ):
             if verbose:
-                print("\n\n State Dictionary:", event)
+                print("\nState Dictionary:", event)
             else:
-                print("\n\n")
+                print("\n")
 
 
 

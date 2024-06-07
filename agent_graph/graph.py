@@ -1,4 +1,3 @@
-import curses
 import ast
 from langchain_core.runnables import RunnableLambda
 from langgraph.graph import StateGraph, END
@@ -72,6 +71,7 @@ def create_graph():
             planner_agent=planner_prompt_template,
             researcher_agent=researcher_prompt_template,
             reporter_agent=reporter_prompt_template,
+            serp=lambda: get_agent_graph_state(state=state, state_key="serper_latest")
         )
     )
 
@@ -141,7 +141,7 @@ def create_graph():
         # To handle abnormally formatted responses
         try:
             next_agent = review_dict["next_agent"]
-            print(f"Review Passed: {review_dict['review_pass']}\n\n Handing over to {next_agent}\n")
+            print(f"\n\nReview Passed: {review_dict['review_pass']}\n\nHanding over to {next_agent}\n")
 
         except KeyError as e:
             next_agent = "end"
@@ -168,8 +168,7 @@ def create_graph():
     return graph
 
 def compile_workflow(graph):
-    memory = SqliteSaver.from_conn_string(":memory:")  # Here we only save in-memory
-    workflow = graph.compile(checkpointer=memory, interrupt_before=["end"])
-
-    print  ("\n\n Agent Graph Compiled Successfully\n\n")
+    # memory = SqliteSaver.from_conn_string(":memory:")  # Here we only save in-memory
+    # workflow = graph.compile(checkpointer=memory, interrupt_before=["end"])
+    workflow = graph.compile()
     return workflow

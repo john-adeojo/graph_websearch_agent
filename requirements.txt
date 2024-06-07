@@ -4,3 +4,4 @@ langchain-community==0.2.3
 langchain-openai==0.1.8
 beautifulsoup4==4.12.3
 windows-curses==2.3.3
+termcolor==2.4.0

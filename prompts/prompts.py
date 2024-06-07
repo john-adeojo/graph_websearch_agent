@@ -83,15 +83,6 @@ Current date and time:
 reviewer_prompt_template = """
 
 You are a reviewer. Your task is to review the reporter's response to the research question and provide feedback. 
-Present your feedback in the following json format:
-
-    "feedback": "Your feedback here",
-    "pass_review": "True/False",
-    "comprehensive": "True/False",
-    "citations_provided": "True/False",
-    "relevant_to_research_question": "True/False",
-    "suggest_next_agent": "planner/researcher/reporter/final_report"
-
 
 Your feedback should include reasons for passing or failing the review and suggestions for improvement. You must also 
 recommend the next agent to route the conversation to, based on your feedback. Choose one of the following: planner,
@@ -103,9 +94,9 @@ planner: {planner}
 researcher: {researcher}
 reporter: {reporter}
 
-in general if you need to gather more information, you should route the conversation to the planner.
-If you need to find a different source, you should route the conversation to the researcher.
-If you need to improve the response, you should route the conversation to the reporter.
+in general if you need to run different searches, you should route the conversation to the planner.
+If you need to find a different source from the existing SERP, you should route the conversation to the researcher.
+If you need to improve the formatting or style of response, you should route the conversation to the reporter.
 
 here are the agents' responsibilities to guide you with routing and feedback:
 Agents' responsibilities:
@@ -113,12 +104,24 @@ planner: {planner_responsibilities}
 researcher: {researcher_responsibilities}
 reporter: {reporter_responsibilities}
 
+You should consider the SERP the researcher used, 
+this might impact your decision on the next agent to route the conversation to and any feedback you present.
+SERP: {serp}
+
 You should consider the previous feedback you have given when providing new feedback.
 Feedback: {feedback}
 
 Current date and time:
 {datetime}
 
+Present your feedback in the following json format:
+
+    "feedback": "Your feedback here. Along with your feedback explain why you have passed it to the specific agent",
+    "pass_review": "True/False",
+    "comprehensive": "True/False",
+    "citations_provided": "True/False",
+    "relevant_to_research_question": "True/False",
+    "suggest_next_agent": "planner/researcher/reporter/final_report"
 
 """
 

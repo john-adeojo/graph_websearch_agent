@@ -1,5 +1,6 @@
 import yaml
 import os
+from termcolor import colored
 from models.openai_models import get_open_ai, get_open_ai_json
 from prompts.prompts import (
     planner_prompt_template,
@@ -9,6 +10,7 @@ from prompts.prompts import (
 )
 from utils.helper_functions import get_current_utc_datetime, check_for_content
 from states.state import AgentGraphState
+
 
 
 def planner_agent(state:AgentGraphState, research_question, prompt=planner_prompt_template, llm=get_open_ai_json(), feedback=None, previous_plans=None):
@@ -35,7 +37,9 @@ def planner_agent(state:AgentGraphState, research_question, prompt=planner_promp
 
     state = {**state, "planner_response": ai_msg.content}
 
-    print("Planner:", ai_msg.content)
+    print(colored(f"Planner 👩🏿‍💻: {ai_msg.content}", 'cyan'))
+
+    # print("Planner:", ai_msg.content)
 
     return state
 
@@ -61,7 +65,7 @@ def researcher_agent(state:AgentGraphState, research_question, prompt=researcher
 
     ai_msg = llm.invoke(messages)
 
-    print("Researcher:", ai_msg.content)
+    print(colored(f"Researcher 🧑🏼‍💻: {ai_msg.content}", 'green'))
 
     state = {**state, "researcher_response": ai_msg.content}
 
@@ -91,7 +95,8 @@ def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_pro
 
     ai_msg = llm.invoke(messages)
     
-    print("Reporter (Draft):", ai_msg.content)
+    print(colored(f"Reporter 👨‍💻: {ai_msg.content}", 'yellow'))
+    # print("Reporter (Draft):", ai_msg.content)
 
     state = {**state, "reporter_response": ai_msg.content}
 
@@ -108,7 +113,8 @@ def reviewer_agent(
         planner_agent=None, 
         researcher_agent=None, 
         reporter_agent=None,
-        feedback=None
+        feedback=None,
+        serp=None
         ):
     
     planner_value = planner() if callable(planner) else planner
@@ -132,7 +138,8 @@ def reviewer_agent(
         researcher_responsibilities=researcher_agent_value,
         reporter_responsibilities=reporter_agent_value,
         feedback=feedback_value,
-        datetime=get_current_utc_datetime()
+        datetime=get_current_utc_datetime(),
+        serp=serp().content
     )
 
     messages = [
@@ -142,7 +149,8 @@ def reviewer_agent(
 
     ai_msg = llm.invoke(messages)
 
-    print("Reviewer Assessment", ai_msg.content)
+    print(colored(f"Reviewer 👩🏽‍⚖️: {ai_msg.content}", 'magenta'))
+    # print("Reviewer Assessment", ai_msg.content)
     # custom_print(f"Reviewer Assessment: {ai_msg.content}")
 
     state = {**state, "reviewer_response": ai_msg.content}
@@ -153,7 +161,9 @@ def reviewer_agent(
 def final_report(state:AgentGraphState, final_response=None):
     final_response_value = final_response() if callable(final_response) else final_response
 
-    print("Final Report:", final_response_value.content)
+
+    print(colored(f"Final Report 📝: {final_response_value.content}", 'blue'))
+    # print("Final Report:", final_response_value.content)
     # custom_print(f"Final Report: {final_response_value.content}")
 
     state = {**state, "final_reports": final_response_value.content}
