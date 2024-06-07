@@ -234,7 +234,7 @@ from typing import TypedDict, Annotated
 from langchain_core.messages import HumanMessage
 from models.openai_models import get_open_ai_json
 from langgraph.checkpoint.sqlite import SqliteSaver
-from agents.agents import planner_agent, researcher_agent, reporter_agent, reviewer_agent, end_node
+from agents.agents import planner_agent, researcher_agent, reporter_agent, reviewer_agent, final_report, end_node
 from prompts.prompts import reviewer_prompt_template, planner_prompt_template, researcher_prompt_template, reporter_prompt_template
 from tools.google_serper import get_google_serper
 from tools.basic_scraper import scrape_website
@@ -305,6 +305,14 @@ graph.add_node(
     )
 )
 
+graph.add_node(
+    "final_report", 
+    lambda state: final_report(
+        state=state,
+        final_response=lambda: get_agent_graph_state(state=state, state_key="reporter_latest")
+        )
+)
+
 graph.add_node("end", lambda state: end_node(state=state))
 
 # Define the edges in the agent graph
@@ -325,13 +333,13 @@ def pass_review(state: AgentGraphState, llm=get_open_ai_json()):
             If the reviewer approves, return True. Otherwise, return False.
 
             For the second key, "next_agent", you must provide the name of the agent to route the conversation to.
-            Your choices are: planner, researcher, reporter, or end.
+            Your choices are: planner, researcher, reporter, or final_report.
             You must select only ONE of these options.
 
             Your response must be a json:
             {
                 "review_pass": "True/False",
-                "next_agent": "planner/researcher/reporter/end"
+                "next_agent": "planner/researcher/reporter/final_report"
             }
             """
         },
@@ -366,6 +374,8 @@ graph.add_conditional_edges(
     "reviewer",
     lambda state: pass_review(state=state)
 )
+
+graph.add_edge("final_report", "end")
 
 # workflow = graph.compile()
 memory = SqliteSaver.from_conn_string(":memory:")  # Here we only save in-memory

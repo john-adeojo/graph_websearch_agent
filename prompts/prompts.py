@@ -90,12 +90,12 @@ Present your feedback in the following json format:
     "comprehensive": "True/False",
     "citations_provided": "True/False",
     "relevant_to_research_question": "True/False",
-    "suggest_next_agent": "planner/researcher/reporter/end"
+    "suggest_next_agent": "planner/researcher/reporter/final_report"
 
 
 Your feedback should include reasons for passing or failing the review and suggestions for improvement. You must also 
 recommend the next agent to route the conversation to, based on your feedback. Choose one of the following: planner,
- researcher, reporter, or end. If you pass the review, select "end".
+ researcher, reporter, or final_report. If you pass the review, select "final_report".
 
 Consider the previous agents' work and responsibilities:
 Previous agents' work:

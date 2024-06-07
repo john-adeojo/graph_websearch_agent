@@ -132,8 +132,17 @@ def reviewer_agent(
     return state
 
 
+def final_report(state:AgentGraphState, final_response=None):
+    final_response_value = final_response() if callable(final_response) else final_response
+
+    print("\n\n\n\n\nEND NODE", final_response_value.content)
+
+    state = {**state, "final_reports": final_response_value.content}
+
+    return state
+
 def end_node(state:AgentGraphState):
-    state = {**state, "end_chain": "End of the graph"}
+    state = {**state, "end_chain": "end_chain"}
     return state
 
 

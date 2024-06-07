@@ -10,6 +10,7 @@ class AgentGraphState(TypedDict):
     reviewer_response: Annotated[list, add_messages]
     serper_response: Annotated[list, add_messages]
     scraper_response: Annotated[list, add_messages]
+    final_reports: Annotated[list, add_messages]
     end_chain: Annotated[list, add_messages]
 
 # Define the nodes in the agent graph
@@ -73,5 +74,6 @@ state = {
     "reviewer_response": [],
     "serper_response": [],
     "scraper_response": [],
-    "end_chain": ""
+    "final_reports": [],
+    "end_chain": []
 }
