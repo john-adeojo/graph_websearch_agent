@@ -16,6 +16,11 @@ def planner_agent(state:AgentGraphState, research_question, prompt=planner_promp
     feedback_value = feedback() if callable(feedback) else feedback
     previous_plans_value = previous_plans() if callable(previous_plans) else previous_plans
 
+    if feedback_value:
+        feedback_value = feedback_value.content
+    else:
+        feedback_value = feedback_value
+
     planner_prompt = prompt.format(
         feedback=feedback_value,
         previous_plans=previous_plans_value,
@@ -31,12 +36,19 @@ def planner_agent(state:AgentGraphState, research_question, prompt=planner_promp
 
     state = {**state, "planner_response": ai_msg.content}
 
+    print("Planner:", ai_msg.content)
+
     return state
 
 def researcher_agent(state:AgentGraphState, research_question, prompt=researcher_prompt_template, llm=get_open_ai_json(), feedback=None, previous_selections=None, serp=None):
 
     feedback_value = feedback() if callable(feedback) else feedback
     previous_selections_value = previous_selections() if callable(previous_selections) else previous_selections
+
+    if feedback_value:
+        feedback_value = feedback_value.content
+    else:
+        feedback_value = feedback_value
 
     researcher_prompt = prompt.format(
         feedback=feedback_value,
@@ -52,6 +64,8 @@ def researcher_agent(state:AgentGraphState, research_question, prompt=researcher
 
     ai_msg = llm.invoke(messages)
 
+    print("Researcher:", ai_msg.content)
+
     state = {**state, "researcher_response": ai_msg.content}
 
     return state
@@ -61,6 +75,11 @@ def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_pro
     feedback_value = feedback() if callable(feedback) else feedback
     previous_reports_value = previous_reports() if callable(previous_reports) else previous_reports
     research_value = research() if callable(research) else research
+
+    if feedback_value:
+        feedback_value = feedback_value.content
+    else:
+        feedback_value = feedback_value
     
     
     reporter_prompt = prompt.format(
@@ -77,7 +96,7 @@ def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_pro
 
     ai_msg = llm.invoke(messages)
     
-    print("\n\nREPORTER RESPONSE", ai_msg.content)
+    print("Reporter (Draft):", ai_msg.content)
 
     state = {**state, "reporter_response": ai_msg.content}
 
@@ -102,10 +121,12 @@ def reviewer_agent(
     planner_agent_value = planner_agent
     researcher_agent_value = researcher_agent
     reporter_agent_value = reporter_agent
-    # planner_agent_value = planner_agent() if callable(planner_agent) else planner_agent
-    # researcher_agent_value = researcher_agent() if callable(researcher_agent) else researcher_agent
-    # reporter_agent_value = reporter_agent() if callable(reporter_agent) else reporter_agent
     feedback_value = feedback() if callable(feedback) else feedback
+
+    if feedback_value:
+        feedback_value = feedback_value.content
+    else:
+        feedback_value = feedback_value
     
     reviewer_prompt = prompt.format(
         planner = planner_value.content,
@@ -125,7 +146,7 @@ def reviewer_agent(
 
     ai_msg = llm.invoke(messages)
 
-    print("REVIEWER RESPONSE", ai_msg.content)
+    print("Reviewer Assessment", ai_msg.content)
 
     state = {**state, "reviewer_response": ai_msg.content}
 
@@ -135,7 +156,7 @@ def reviewer_agent(
 def final_report(state:AgentGraphState, final_response=None):
     final_response_value = final_response() if callable(final_response) else final_response
 
-    print("\n\n\n\n\nEND NODE", final_response_value.content)
+    print("Final Report:", final_response_value.content)
 
     state = {**state, "final_reports": final_response_value.content}
 
