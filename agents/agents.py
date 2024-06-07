@@ -108,7 +108,8 @@ def reviewer_agent(
         planner_agent=None, 
         researcher_agent=None, 
         reporter_agent=None,
-          feedback=None):
+        feedback=None
+        ):
     
     planner_value = planner() if callable(planner) else planner
     researcher_value = researcher() if callable(researcher) else researcher
@@ -142,6 +143,7 @@ def reviewer_agent(
     ai_msg = llm.invoke(messages)
 
     print("Reviewer Assessment", ai_msg.content)
+    # custom_print(f"Reviewer Assessment: {ai_msg.content}")
 
     state = {**state, "reviewer_response": ai_msg.content}
 
@@ -152,6 +154,7 @@ def final_report(state:AgentGraphState, final_response=None):
     final_response_value = final_response() if callable(final_response) else final_response
 
     print("Final Report:", final_response_value.content)
+    # custom_print(f"Final Report: {final_response_value.content}")
 
     state = {**state, "final_reports": final_response_value.content}
 

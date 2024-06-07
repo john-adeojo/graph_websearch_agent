@@ -95,7 +95,7 @@ Present your feedback in the following json format:
 
 Your feedback should include reasons for passing or failing the review and suggestions for improvement. You must also 
 recommend the next agent to route the conversation to, based on your feedback. Choose one of the following: planner,
- researcher, reporter, or final_report. If you pass the review, select "final_report".
+researcher, reporter, or final_report. If you pass the review, you MUST select "final_report".
 
 Consider the previous agents' work and responsibilities:
 Previous agents' work:
