@@ -10,9 +10,8 @@ from prompts.prompts import (
 from utils.helper_functions import get_current_utc_datetime
 from states.state import AgentGraphState
 
-model = 'gpt-4o'
 
-def planner_agent(state:AgentGraphState, research_question, prompt=planner_prompt_template, llm=get_open_ai_json(model=model), feedback=None, previous_plans=None):
+def planner_agent(state:AgentGraphState, research_question, prompt=planner_prompt_template, llm=get_open_ai_json(), feedback=None, previous_plans=None):
 
     planner_prompt = prompt.format(
         feedback=feedback,
@@ -21,9 +20,14 @@ def planner_agent(state:AgentGraphState, research_question, prompt=planner_promp
     )
 
     messages = [
-        ("system", planner_prompt),
-        ("human", f"research question:{research_question}")
+        {"role": "system", "content": planner_prompt},
+        {"role": "human", "content": f"research question: {research_question}"}
     ]
+
+    # messages = [
+    #     ("system", planner_prompt),
+    #     ("human", f"research question:{research_question}. Respond in json.")
+    # ]
 
     ai_msg = llm.invoke(messages)
 
@@ -31,18 +35,24 @@ def planner_agent(state:AgentGraphState, research_question, prompt=planner_promp
 
     return state
 
-def researcher_agent(state:AgentGraphState, research_question, prompt=researcher_prompt_template, llm=get_open_ai_json(model=model), feedback=None, previous_selections=None, serp=None):
+def researcher_agent(state:AgentGraphState, research_question, prompt=researcher_prompt_template, llm=get_open_ai_json(), feedback=None, previous_selections=None, serp=None):
 
     researcher_prompt = prompt.format(
         feedback=feedback,
         previous_selections=previous_selections,
-        serp=serp,
+        serp=serp().content,
         datetime=get_current_utc_datetime()
     )
+
     messages = [
-        ("system", researcher_prompt),
-        ("human", f"research question:{research_question}")
+        {"role": "system", "content": researcher_prompt},
+        {"role": "human", "content": f"research question: {research_question}"}
     ]
+
+    # messages = [
+    #     ("system", f"{researcher_prompt}"),
+    #     ("human", f"research question:{research_question}. Respond in json.")
+    # ]
 
     ai_msg = llm.invoke(messages)
 
@@ -50,7 +60,7 @@ def researcher_agent(state:AgentGraphState, research_question, prompt=researcher
 
     return state
 
-def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_prompt_template, llm=get_open_ai(model=model), feedback=None, previous_reports=None, research=None):
+def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_prompt_template, llm=get_open_ai(), feedback=None, previous_reports=None, research=None):
 
     reporter_prompt = prompt.format(
         feedback=feedback,
@@ -58,12 +68,15 @@ def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_pro
         datetime=get_current_utc_datetime(),
         research=research
     )
+
     messages = [
-        ("system", reporter_prompt),
-        ("human", f"research question:{research_question}")
+        {"role": "system", "content": reporter_prompt},
+        {"role": "human", "content": f"research question: {research_question}"}
     ]
 
     ai_msg = llm.invoke(messages)
+    
+    print("\n\nREPORTER RESPONSE", ai_msg.content)
 
     state = {**state, "reporter_response": ai_msg.content}
 
@@ -73,7 +86,7 @@ def reviewer_agent(
         state:AgentGraphState,
         research_question,
         prompt=reviewer_prompt_template, 
-        llm=get_open_ai_json, 
+        llm=get_open_ai_json(), 
         planner=None, 
         researcher=None, 
         reporter=None, 
@@ -81,6 +94,8 @@ def reviewer_agent(
         researcher_agent=None, 
         reporter_agent=None,
           feedback=None):
+    
+    print("\n\n\n\nDENUGGING REVIEWER AGENT", f"planner: {planner()}, researcher: {researcher()}, reporter: {reporter()}, planner_agent: {planner_agent()}, researcher_agent: {researcher_agent()}, reporter_agent: {reporter_agent()}")
 
     reviewer_prompt = prompt.format(
         planner = planner,
@@ -92,12 +107,15 @@ def reviewer_agent(
         feedback=feedback,
         datetime=get_current_utc_datetime()
     )
+
     messages = [
-        ("system", reviewer_prompt),
-        ("human", f"research question:{research_question}")  
+        {"role": "system", "content": reviewer_prompt},
+        {"role": "user", "content": f"research question: {research_question}"}
     ]
 
     ai_msg = llm.invoke(messages)
+
+    print("REVIEWER RESPONSE", ai_msg.content)
 
     state = {**state, "reviewer_response": ai_msg.content}
 

@@ -311,9 +311,14 @@ def pass_review(state: AgentGraphState, llm=get_open_ai_json):
     else:
         review = "No review"
 
+    # messages = [
+    #     {"role": "system", "content": reviewer_prompt},
+    #     {"role": "human", "content": f"research question: {research_question}"}
+    # ]
+
     messages = [
-        (
-            "system",
+        {
+            "role":"system","content":
             """
             Your purpose is to route the conversation to the appropriate agent based on the reviewer's feedback.
             You do this by providing a response in the form of a dictionary.
@@ -324,14 +329,14 @@ def pass_review(state: AgentGraphState, llm=get_open_ai_json):
             Your choices are: planner, researcher, reporter, or end.
             You must select only ONE of these options.
 
-            Your response must be a dictionary with this format:
+            Your response must be a json:
             {
                 "review_pass": "True/False",
                 "next_agent": "planner/researcher/reporter/end"
             }
             """
-        ),
-        ("reviewer", f"Reviewer's feedback: {review}")
+        },
+        {"role":"human", "content": f"Reviewer's feedback: {review}. Respond with json"}
     ]
 
     ai_msg = llm.invoke(messages)
