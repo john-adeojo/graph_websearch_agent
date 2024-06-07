@@ -13,7 +13,7 @@ from states.state import AgentGraphState
 
 
 
-def planner_agent(state:AgentGraphState, research_question, prompt=planner_prompt_template, llm=get_open_ai_json(), feedback=None, previous_plans=None):
+def planner_agent(state:AgentGraphState, research_question, prompt=planner_prompt_template, model=None, feedback=None, previous_plans=None):
 
     feedback_value = feedback() if callable(feedback) else feedback
     previous_plans_value = previous_plans() if callable(previous_plans) else previous_plans
@@ -33,6 +33,7 @@ def planner_agent(state:AgentGraphState, research_question, prompt=planner_promp
         {"role": "user", "content": f"research question: {research_question}"}
     ]
 
+    llm = get_open_ai_json(model=model)
     ai_msg = llm.invoke(messages)
 
     state = {**state, "planner_response": ai_msg.content}
@@ -43,7 +44,7 @@ def planner_agent(state:AgentGraphState, research_question, prompt=planner_promp
 
     return state
 
-def researcher_agent(state:AgentGraphState, research_question, prompt=researcher_prompt_template, llm=get_open_ai_json(), feedback=None, previous_selections=None, serp=None):
+def researcher_agent(state:AgentGraphState, research_question, prompt=researcher_prompt_template, model=None, feedback=None, previous_selections=None, serp=None):
 
     feedback_value = feedback() if callable(feedback) else feedback
     previous_selections_value = previous_selections() if callable(previous_selections) else previous_selections
@@ -63,6 +64,7 @@ def researcher_agent(state:AgentGraphState, research_question, prompt=researcher
         {"role": "user", "content": f"research question: {research_question}"}
     ]
 
+    llm = get_open_ai_json(model=model)
     ai_msg = llm.invoke(messages)
 
     print(colored(f"Researcher 🧑🏼‍💻: {ai_msg.content}", 'green'))
@@ -71,7 +73,7 @@ def researcher_agent(state:AgentGraphState, research_question, prompt=researcher
 
     return state
 
-def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_prompt_template, llm=get_open_ai(), feedback=None, previous_reports=None, research=None):
+def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_prompt_template, model=None, feedback=None, previous_reports=None, research=None):
 
     feedback_value = feedback() if callable(feedback) else feedback
     previous_reports_value = previous_reports() if callable(previous_reports) else previous_reports
@@ -93,6 +95,7 @@ def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_pro
         {"role": "user", "content": f"research question: {research_question}"}
     ]
 
+    llm = get_open_ai(model=model)
     ai_msg = llm.invoke(messages)
     
     print(colored(f"Reporter 👨‍💻: {ai_msg.content}", 'yellow'))
@@ -106,7 +109,7 @@ def reviewer_agent(
         state:AgentGraphState,
         research_question,
         prompt=reviewer_prompt_template, 
-        llm=get_open_ai_json(), 
+        model=None, 
         planner=None, 
         researcher=None, 
         reporter=None, 
@@ -147,6 +150,7 @@ def reviewer_agent(
         {"role": "user", "content": f"research question: {research_question}"}
     ]
 
+    llm = get_open_ai_json(model=model)
     ai_msg = llm.invoke(messages)
 
     print(colored(f"Reviewer 👩🏽‍⚖️: {ai_msg.content}", 'magenta'))

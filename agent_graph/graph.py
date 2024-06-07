@@ -24,7 +24,7 @@ from tools.basic_scraper import scrape_website
 from states.state import AgentGraphState, get_agent_graph_state, state
 # from utils.helper_functions import custom_print
 
-def create_graph():
+def create_graph(model):
     graph = StateGraph(AgentGraphState)
 
     graph.add_node(
@@ -34,6 +34,7 @@ def create_graph():
             research_question=state["research_question"],  
             feedback=lambda: get_agent_graph_state(state=state, state_key="reviewer_latest"), 
             previous_plans=lambda: get_agent_graph_state(state=state, state_key="planner_all"),
+            model=model
         )
     )
 
@@ -45,6 +46,7 @@ def create_graph():
             feedback=lambda: get_agent_graph_state(state=state, state_key="reviewer_latest"), 
             previous_selections=lambda: get_agent_graph_state(state=state, state_key="researcher_all"), 
             serp=lambda: get_agent_graph_state(state=state, state_key="serper_latest"),
+            model=model
         )
     )
 
@@ -56,6 +58,7 @@ def create_graph():
             feedback=lambda: get_agent_graph_state(state=state, state_key="reviewer_latest"), 
             previous_reports=lambda: get_agent_graph_state(state=state, state_key="reporter_all"), 
             research=lambda: get_agent_graph_state(state=state, state_key="researcher_latest"),
+            model=model
         )
     )
 
@@ -71,7 +74,8 @@ def create_graph():
             planner_agent=planner_prompt_template,
             researcher_agent=researcher_prompt_template,
             reporter_agent=reporter_prompt_template,
-            serp=lambda: get_agent_graph_state(state=state, state_key="serper_latest")
+            serp=lambda: get_agent_graph_state(state=state, state_key="serper_latest"),
+            model=model
         )
     )
 
@@ -102,7 +106,7 @@ def create_graph():
     graph.add_node("end", lambda state: end_node(state=state))
 
     # Define the edges in the agent graph
-    def pass_review(state: AgentGraphState, llm=get_open_ai_json()):
+    def pass_review(state: AgentGraphState, model=None):
         review_list = state["reviewer_response"]
         if review_list:
             review = review_list[-1]
@@ -134,6 +138,7 @@ def create_graph():
             {"role":"user", "content": f"Reviewer's feedback: {review}. Respond with json"}
         ]
 
+        llm = get_open_ai_json(model=model)
         ai_msg = llm.invoke(messages)
 
         review_dict = ast.literal_eval(ai_msg.content)
@@ -160,7 +165,7 @@ def create_graph():
 
     graph.add_conditional_edges(
         "reviewer",
-        lambda state: pass_review(state=state)
+        lambda state: pass_review(state=state, model=model),
     )
 
     graph.add_edge("final_report", "end")
