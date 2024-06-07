@@ -235,6 +235,7 @@ from langchain_core.messages import HumanMessage
 from models.openai_models import get_open_ai_json
 from langgraph.checkpoint.sqlite import SqliteSaver
 from agents.agents import planner_agent, researcher_agent, reporter_agent, reviewer_agent, end_node
+from prompts.prompts import reviewer_prompt_template, planner_prompt_template, researcher_prompt_template, reporter_prompt_template
 from tools.google_serper import get_google_serper
 from tools.basic_scraper import scrape_website
 from states.state import AgentGraphState, get_agent_graph_state, state
@@ -281,7 +282,10 @@ graph.add_node(
         feedback=lambda: get_agent_graph_state(state=state, state_key="reviewer_all"), 
         planner=lambda: get_agent_graph_state(state=state, state_key="planner_latest"), 
         researcher=lambda: get_agent_graph_state(state=state, state_key="researcher_latest"), 
-        reporter=lambda: get_agent_graph_state(state=state, state_key="reporter_latest")
+        reporter=lambda: get_agent_graph_state(state=state, state_key="reporter_latest"),
+        planner_agent=planner_prompt_template,
+        researcher_agent=researcher_prompt_template,
+        reporter_agent=reporter_prompt_template,
     )
 )
 
@@ -304,17 +308,12 @@ graph.add_node(
 graph.add_node("end", lambda state: end_node(state=state))
 
 # Define the edges in the agent graph
-def pass_review(state: AgentGraphState, llm=get_open_ai_json):
+def pass_review(state: AgentGraphState, llm=get_open_ai_json()):
     review_list = state["reviewer_response"]
     if review_list:
         review = review_list[-1]
     else:
         review = "No review"
-
-    # messages = [
-    #     {"role": "system", "content": reviewer_prompt},
-    #     {"role": "human", "content": f"research question: {research_question}"}
-    # ]
 
     messages = [
         {
@@ -365,7 +364,7 @@ graph.add_edge("reporter", "reviewer")
 
 graph.add_conditional_edges(
     "reviewer",
-    lambda state: pass_review(state, llm=get_open_ai_json)
+    lambda state: pass_review(state=state)
 )
 
 # workflow = graph.compile()
