@@ -126,7 +126,7 @@ def pass_review(state: AgentGraphState, llm=get_open_ai_json()):
             }
             """
         },
-        {"role":"human", "content": f"Reviewer's feedback: {review}. Respond with json"}
+        {"role":"user", "content": f"Reviewer's feedback: {review}. Respond with json"}
     ]
 
     ai_msg = llm.invoke(messages)
@@ -165,7 +165,9 @@ memory = SqliteSaver.from_conn_string(":memory:")  # Here we only save in-memory
 workflow = graph.compile(checkpointer=memory, interrupt_before=["end"])
 
 if __name__ == "__main__":
-    inputs = {"research_question": "what is the weather in sf"}
+
+    question = "When did the capital of Nigeria change?"
+    inputs = {"research_question": question}
     # workflow.invoke(inputs)
 
     verbose = False

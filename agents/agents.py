@@ -7,7 +7,7 @@ from prompts.prompts import (
     reporter_prompt_template,
     reviewer_prompt_template
 )
-from utils.helper_functions import get_current_utc_datetime
+from utils.helper_functions import get_current_utc_datetime, check_for_content
 from states.state import AgentGraphState
 
 
@@ -16,10 +16,8 @@ def planner_agent(state:AgentGraphState, research_question, prompt=planner_promp
     feedback_value = feedback() if callable(feedback) else feedback
     previous_plans_value = previous_plans() if callable(previous_plans) else previous_plans
 
-    if feedback_value:
-        feedback_value = feedback_value.content
-    else:
-        feedback_value = feedback_value
+    feedback_value = check_for_content(feedback_value)
+    previous_plans_value = check_for_content(previous_plans_value)
 
     planner_prompt = prompt.format(
         feedback=feedback_value,
@@ -27,9 +25,10 @@ def planner_agent(state:AgentGraphState, research_question, prompt=planner_promp
         datetime=get_current_utc_datetime()
     )
 
+
     messages = [
         {"role": "system", "content": planner_prompt},
-        {"role": "human", "content": f"research question: {research_question}"}
+        {"role": "user", "content": f"research question: {research_question}"}
     ]
 
     ai_msg = llm.invoke(messages)
@@ -45,10 +44,8 @@ def researcher_agent(state:AgentGraphState, research_question, prompt=researcher
     feedback_value = feedback() if callable(feedback) else feedback
     previous_selections_value = previous_selections() if callable(previous_selections) else previous_selections
 
-    if feedback_value:
-        feedback_value = feedback_value.content
-    else:
-        feedback_value = feedback_value
+    feedback_value = check_for_content(feedback_value)
+    previous_selections_value = check_for_content(previous_selections_value)
 
     researcher_prompt = prompt.format(
         feedback=feedback_value,
@@ -59,7 +56,7 @@ def researcher_agent(state:AgentGraphState, research_question, prompt=researcher
 
     messages = [
         {"role": "system", "content": researcher_prompt},
-        {"role": "human", "content": f"research question: {research_question}"}
+        {"role": "user", "content": f"research question: {research_question}"}
     ]
 
     ai_msg = llm.invoke(messages)
@@ -76,11 +73,9 @@ def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_pro
     previous_reports_value = previous_reports() if callable(previous_reports) else previous_reports
     research_value = research() if callable(research) else research
 
-    if feedback_value:
-        feedback_value = feedback_value.content
-    else:
-        feedback_value = feedback_value
-    
+    feedback_value = check_for_content(feedback_value)
+    previous_reports_value = check_for_content(previous_reports_value)
+    research_value = check_for_content(research_value)
     
     reporter_prompt = prompt.format(
         feedback=feedback_value,
@@ -91,7 +86,7 @@ def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_pro
 
     messages = [
         {"role": "system", "content": reporter_prompt},
-        {"role": "human", "content": f"research question: {research_question}"}
+        {"role": "user", "content": f"research question: {research_question}"}
     ]
 
     ai_msg = llm.invoke(messages)
@@ -123,15 +118,15 @@ def reviewer_agent(
     reporter_agent_value = reporter_agent
     feedback_value = feedback() if callable(feedback) else feedback
 
-    if feedback_value:
-        feedback_value = feedback_value.content
-    else:
-        feedback_value = feedback_value
+    planner_value = check_for_content(planner_value)
+    researcher_value = check_for_content(researcher_value)
+    reporter_value = check_for_content(reporter_value)
+    feedback_value = check_for_content(feedback_value)
     
     reviewer_prompt = prompt.format(
-        planner = planner_value.content,
-        researcher=researcher_value.content,
-        reporter=reporter_value.content,
+        planner = planner_value,
+        researcher=researcher_value,
+        reporter=reporter_value,
         planner_responsibilities=planner_agent_value,
         researcher_responsibilities=researcher_agent_value,
         reporter_responsibilities=reporter_agent_value,

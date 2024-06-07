@@ -103,6 +103,11 @@ planner: {planner}
 researcher: {researcher}
 reporter: {reporter}
 
+in general if you need to gather more information, you should route the conversation to the planner.
+If you need to find a different source, you should route the conversation to the researcher.
+If you need to improve the response, you should route the conversation to the reporter.
+
+here are the agents' responsibilities to guide you with routing and feedback:
 Agents' responsibilities:
 planner: {planner_responsibilities}
 researcher: {researcher_responsibilities}
