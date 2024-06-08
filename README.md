@@ -1,6 +1,8 @@
 
 # Custom WebSearch Agent with LangGraph
 
+### Watch the Tutorial:
+[![Watch this video on YouTube](https://img.youtube.com/vi/R-o_a6dvzQM/0.jpg)](https://www.youtube.com/watch?v=R-o_a6dvzQM)
 
 
 ### Agent Schema:
