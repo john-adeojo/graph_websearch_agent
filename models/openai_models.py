@@ -5,7 +5,6 @@ import os
 config_path = os.path.join(os.path.dirname(__file__), '..', 'config', 'config.yaml')
 load_config(config_path)
 
-# model = 'gpt-3.5-turbo'
 
 def get_open_ai(temperature=0, model='gpt-3.5-turbo'):
 
