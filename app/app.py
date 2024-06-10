@@ -1,10 +1,23 @@
 from agent_graph.graph import create_graph, compile_workflow
 
-model = 'gpt-4o'
+# server = 'ollama'
+# model = 'llama3:instruct'
+# model_endpoint = None
+
+# server = 'openai'
+# model = 'gpt-4o'
+# model_endpoint = None
+
+server = 'vllm'
+model = 'meta-llama/Meta-Llama-3-70B-Instruct' # full HF path
+runpod_endpoint = 'https://t3o6jzhg3zqci3-8000.proxy.runpod.net/' 
+model_endpoint = runpod_endpoint + 'v1/chat/completions'
+stop = "<|end_of_text|>"
+
 iterations = 40
 
 print ("Creating graph and compiling workflow...")
-graph = create_graph(model=model)
+graph = create_graph(server=server, model=model, model_endpoint=model_endpoint)
 workflow = compile_workflow(graph)
 print ("Graph and workflow created.")
 

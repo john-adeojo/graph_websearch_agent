@@ -8,28 +8,6 @@ from states.state import AgentGraphState
 
 config_path = os.path.join(os.path.dirname(__file__), '..', 'config', 'config.yaml')
 
-# def get_google_serper(state:AgentGraphState, plan=None):
-#     load_config(config_path)
-
-#     plan_data = plan().content
-#     plan_data = ast.literal_eval(plan_data)
-#     search = plan_data.get("search_term")
-
-#     search = GoogleSerperAPIWrapper()
-#     results = search.results(search)
-
-#     print("SEARCH RESULTS", results)
-
-#     try:
-#         search = GoogleSerperAPIWrapper()
-#         results = search.results(search)
-#         state = {**state, "serper_response": results}
-#         return state
-#     except Exception as e:
-#         print("SEARCH RESULTS", results)
-#         state = {**state, "serper_response": str(e)}
-#         return state
-
 
 def format_results(organic_results):
 
@@ -46,7 +24,7 @@ def get_google_serper(state:AgentGraphState, plan):
     load_config(config_path)
 
     plan_data = plan().content
-    plan_data = ast.literal_eval(plan_data)
+    plan_data = json.loads(plan_data)
     search = plan_data.get("search_term")
 
     search_url = "https://google.serper.dev/search"

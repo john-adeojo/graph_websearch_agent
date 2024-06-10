@@ -56,3 +56,20 @@
 python -m app.app
 ```
 Then enter your query.
+
+## If you want to work with Ollama
+
+
+### Setup Ollama Server
+1. **Download Ollama:**
+   Download [https://ollama.com/download](Ollama)
+
+2. **Download an Ollama Model:**
+   ```bash
+   curl http://localhost:11434/api/pull -d "{\"name\": \"llama3\"}"
+   ```
+Ollama[https://github.com/ollama/ollama/blob/main/docs/api.md#list-local-models](API documentionation)
+
+#### Video on how I integrated the Ollama Server:
+
+[![Watch the video](https://img.youtube.com/vi/tVcOU054iWA/0.jpg)](https://youtu.be/tVcOU054iWA)

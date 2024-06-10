@@ -24,6 +24,26 @@ Your response must take the following json format:
 
 """
 
+planner_guided_json = {
+    "type": "object",
+    "properties": {
+        "search_term": {
+            "type": "string",
+            "description": "The most relevant search term to start with"
+        },
+        "overall_strategy": {
+            "type": "string",
+            "description": "The overall strategy to guide the search process"
+        },
+        "additional_information": {
+            "type": "string",
+            "description": "Any additional information to guide the search including other search terms or filters"
+        }
+    },
+    "required": ["search_term", "overall_strategy", "additional_information"]
+}
+
+
 researcher_prompt_template = """
 You are a researcher. You will be presented with a search engine results page containing a list of potentially relevant 
 search results. Your task is to read through these results, select the most relevant one, and provide a comprehensive 
@@ -49,6 +69,26 @@ Consider this information when making your new selection.
 Current date and time:
 {datetime}
 """
+
+researcher_guided_json = {
+    "type": "object",
+    "properties": {
+        "selected_page_url": {
+            "type": "string",
+            "description": "The exact URL of the page you selected"
+        },
+        "description": {
+            "type": "string",
+            "description": "A brief description of the page"
+        },
+        "reason_for_selection": {
+            "type": "string",
+            "description": "Why you selected this page"
+        }
+    },
+    "required": ["selected_page_url", "description", "reason_for_selection"]
+}
+
 
 reporter_prompt_template = """
 You are a reporter. You will be presented with a webpage containing information relevant to the research question. 
@@ -114,13 +154,43 @@ Feedback: {feedback}
 Current date and time:
 {datetime}
 
-Present your feedback in the following json format:
+You must present your feedback in the following json format:
 
     "feedback": "Your feedback here. Along with your feedback explain why you have passed it to the specific agent",
     "pass_review": "True/False",
     "comprehensive": "True/False",
     "citations_provided": "True/False",
     "relevant_to_research_question": "True/False",
-    "suggest_next_agent": "planner/researcher/reporter/final_report"
+    "suggest_next_agent": "one of the following: planner/researcher/reporter/final_report"
 
 """
+reviewer_guided_json = {
+    "type": "object",
+    "properties": {
+        "feedback": {
+            "type": "string",
+            "description": "Your feedback here. Along with your feedback explain why you have passed it to the specific agent"
+        },
+        "pass_review": {
+            "type": "boolean",
+            "description": "True/False"
+        },
+        "comprehensive": {
+            "type": "boolean",
+            "description": "True/False"
+        },
+        "citations_provided": {
+            "type": "boolean",
+            "description": "True/False"
+        },
+        "relevant_to_research_question": {
+            "type": "boolean",
+            "description": "True/False"
+        },
+        "suggest_next_agent": {
+            "type": "string",
+            "description": "one of the following: planner/researcher/reporter/final_report"
+        }
+    },
+    "required": ["feedback", "pass_review", "comprehensive", "citations_provided", "relevant_to_research_question", "suggest_next_agent"]
+}

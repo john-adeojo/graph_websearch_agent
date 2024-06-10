@@ -2,6 +2,8 @@ import yaml
 import os
 from termcolor import colored
 from models.openai_models import get_open_ai, get_open_ai_json
+from models.ollama_models import OllamaModel, OllamaJSONModel
+from models.vllm_models import VllmJSONModel, VllmModel
 from prompts.prompts import (
     planner_prompt_template,
     researcher_prompt_template,
@@ -12,8 +14,7 @@ from utils.helper_functions import get_current_utc_datetime, check_for_content
 from states.state import AgentGraphState
 
 
-
-def planner_agent(state:AgentGraphState, research_question, prompt=planner_prompt_template, model=None, feedback=None, previous_plans=None):
+def planner_agent(state:AgentGraphState, research_question, prompt=planner_prompt_template, model=None, feedback=None, previous_plans=None, server=None, guided_json=None, stop=None, model_endpoint=None):
 
     feedback_value = feedback() if callable(feedback) else feedback
     previous_plans_value = previous_plans() if callable(previous_plans) else previous_plans
@@ -33,18 +34,29 @@ def planner_agent(state:AgentGraphState, research_question, prompt=planner_promp
         {"role": "user", "content": f"research question: {research_question}"}
     ]
 
-    llm = get_open_ai_json(model=model)
+    if server == 'openai':
+        llm = get_open_ai_json(model=model)
+    if server == 'ollama':
+        llm = OllamaJSONModel(model=model)
+    if server == 'vllm':
+        llm = VllmJSONModel(
+            model=model, 
+            guided_json=guided_json,
+            stop=stop,
+            model_endpoint=model_endpoint
+            )
+
     ai_msg = llm.invoke(messages)
 
-    state = {**state, "planner_response": ai_msg.content}
+    response = ai_msg.content
 
-    print(colored(f"Planner 👩🏿‍💻: {ai_msg.content}", 'cyan'))
+    state = {**state, "planner_response": response}
 
-    # print("Planner:", ai_msg.content)
+    print(colored(f"Planner 👩🏿‍💻: {response}", 'cyan'))
 
     return state
 
-def researcher_agent(state:AgentGraphState, research_question, prompt=researcher_prompt_template, model=None, feedback=None, previous_selections=None, serp=None):
+def researcher_agent(state:AgentGraphState, research_question, prompt=researcher_prompt_template, model=None, feedback=None, previous_selections=None, serp=None, server=None, guided_json=None, stop=None, model_endpoint=None):
 
     feedback_value = feedback() if callable(feedback) else feedback
     previous_selections_value = previous_selections() if callable(previous_selections) else previous_selections
@@ -64,16 +76,29 @@ def researcher_agent(state:AgentGraphState, research_question, prompt=researcher
         {"role": "user", "content": f"research question: {research_question}"}
     ]
 
-    llm = get_open_ai_json(model=model)
+    if server == 'openai':
+        llm = get_open_ai_json(model=model)
+    if server == 'ollama':
+        llm = OllamaJSONModel(model=model)
+    if server == 'vllm':
+        llm = VllmJSONModel(
+            model=model, 
+            model_endpoint=model_endpoint, 
+            guided_json=guided_json, 
+            stop=stop
+            )
+
     ai_msg = llm.invoke(messages)
 
-    print(colored(f"Researcher 🧑🏼‍💻: {ai_msg.content}", 'green'))
+    response = ai_msg.content
 
-    state = {**state, "researcher_response": ai_msg.content}
+    print(colored(f"Researcher 🧑🏼‍💻: {response}", 'green'))
+
+    state = {**state, "researcher_response": response}
 
     return state
 
-def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_prompt_template, model=None, feedback=None, previous_reports=None, research=None):
+def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_prompt_template, model=None, feedback=None, previous_reports=None, research=None, server=None, stop=None, model_endpoint=None):
 
     feedback_value = feedback() if callable(feedback) else feedback
     previous_reports_value = previous_reports() if callable(previous_reports) else previous_reports
@@ -95,13 +120,24 @@ def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_pro
         {"role": "user", "content": f"research question: {research_question}"}
     ]
 
-    llm = get_open_ai(model=model)
-    ai_msg = llm.invoke(messages)
-    
-    print(colored(f"Reporter 👨‍💻: {ai_msg.content}", 'yellow'))
-    # print("Reporter (Draft):", ai_msg.content)
+    if server == 'openai':
+        llm = get_open_ai(model=model)
+    if server == 'ollama':
+        llm = OllamaModel(model=model)
+    if server == 'vllm':
+        llm = VllmModel(
+            model=model, 
+            model_endpoint=model_endpoint, 
+            stop=stop
+            )
 
-    state = {**state, "reporter_response": ai_msg.content}
+    ai_msg = llm.invoke(messages)
+
+    response = ai_msg.content
+    
+    print(colored(f"Reporter 👨‍💻: {response}", 'yellow'))
+
+    state = {**state, "reporter_response": response}
 
     return state
 
@@ -117,7 +153,11 @@ def reviewer_agent(
         researcher_agent=None, 
         reporter_agent=None,
         feedback=None,
-        serp=None
+        serp=None,
+        server=None,
+        guided_json=None,
+        stop=None,
+        model_endpoint=None
         ):
     
     planner_value = planner() if callable(planner) else planner
@@ -150,14 +190,26 @@ def reviewer_agent(
         {"role": "user", "content": f"research question: {research_question}"}
     ]
 
-    llm = get_open_ai_json(model=model)
+    if server == 'openai':
+        llm = get_open_ai_json(model=model)
+    if server == 'ollama':
+        llm = OllamaJSONModel(model=model)
+    if server == 'vllm':
+        llm = VllmJSONModel(
+            model=model, 
+            guided_json=guided_json, 
+            stop=stop, 
+            model_endpoint=model_endpoint
+            )
+
+
     ai_msg = llm.invoke(messages)
 
-    print(colored(f"Reviewer 👩🏽‍⚖️: {ai_msg.content}", 'magenta'))
-    # print("Reviewer Assessment", ai_msg.content)
-    # custom_print(f"Reviewer Assessment: {ai_msg.content}")
+    response = ai_msg.content
 
-    state = {**state, "reviewer_response": ai_msg.content}
+    print(colored(f"Reviewer 👩🏽‍⚖️: {response}", 'magenta'))
+
+    state = {**state, "reviewer_response": response}
 
     return state
 
@@ -165,12 +217,11 @@ def reviewer_agent(
 def final_report(state:AgentGraphState, final_response=None):
     final_response_value = final_response() if callable(final_response) else final_response
 
+    response = final_response_value.content
 
-    print(colored(f"Final Report 📝: {final_response_value.content}", 'blue'))
-    # print("Final Report:", final_response_value.content)
-    # custom_print(f"Final Report: {final_response_value.content}")
+    print(colored(f"Final Report 📝: {response}", 'blue'))
 
-    state = {**state, "final_reports": final_response_value.content}
+    state = {**state, "final_reports": response}
 
     return state
 
