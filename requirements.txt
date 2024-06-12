@@ -2,6 +2,7 @@ langchain-core==0.2.4
 langgraph==0.0.64
 langchain-community==0.2.3
 langchain-openai==0.1.8
+langchain-groq==0.1.5
 beautifulsoup4==4.12.3
 # windows-curses==2.3.3
 termcolor==2.4.0

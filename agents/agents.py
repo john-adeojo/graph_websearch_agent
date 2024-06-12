@@ -2,6 +2,7 @@ import yaml
 import os
 from termcolor import colored
 from models.openai_models import get_open_ai, get_open_ai_json
+from models.groq_models import get_groq, get_groq_json
 from models.ollama_models import OllamaModel, OllamaJSONModel
 from models.vllm_models import VllmJSONModel, VllmModel
 from prompts.prompts import (
@@ -33,7 +34,8 @@ def planner_agent(state:AgentGraphState, research_question, prompt=planner_promp
         {"role": "system", "content": planner_prompt},
         {"role": "user", "content": f"research question: {research_question}"}
     ]
-
+    if server == 'groq':
+        llm = get_groq_json(model=model)
     if server == 'openai':
         llm = get_open_ai_json(model=model)
     if server == 'ollama':
@@ -75,7 +77,8 @@ def researcher_agent(state:AgentGraphState, research_question, prompt=researcher
         {"role": "system", "content": researcher_prompt},
         {"role": "user", "content": f"research question: {research_question}"}
     ]
-
+    if server == 'groq':
+        llm = get_groq_json(model=model)
     if server == 'openai':
         llm = get_open_ai_json(model=model)
     if server == 'ollama':
@@ -119,7 +122,8 @@ def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_pro
         {"role": "system", "content": reporter_prompt},
         {"role": "user", "content": f"research question: {research_question}"}
     ]
-
+    if server == 'groq':
+        llm = get_groq(model=model)
     if server == 'openai':
         llm = get_open_ai(model=model)
     if server == 'ollama':
@@ -189,7 +193,8 @@ def reviewer_agent(
         {"role": "system", "content": reviewer_prompt},
         {"role": "user", "content": f"research question: {research_question}"}
     ]
-
+    if server == 'groq':
+        llm = get_groq_json(model=model)
     if server == 'openai':
         llm = get_open_ai_json(model=model)
     if server == 'ollama':

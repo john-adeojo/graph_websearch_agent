@@ -8,6 +8,10 @@ from agent_graph.graph import create_graph, compile_workflow
 # model = 'gpt-4o'
 # model_endpoint = None
 
+# server = 'groq'
+# model = 'llama3-70b-8192'
+# model_endpoint = None
+
 server = 'vllm'
 model = 'meta-llama/Meta-Llama-3-70B-Instruct' # full HF path
 runpod_endpoint = 'https://t3o6jzhg3zqci3-8000.proxy.runpod.net/' 
