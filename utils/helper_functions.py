@@ -20,13 +20,22 @@ def get_current_utc_datetime():
 # for checking if an attribute of the state dict has content.
 def check_for_content(var):
     if var:
-        try:
-            var = var.content
-            return var.content
-        except:
-            return var
+        if type(var) == list:
+            # return var[-1].content
+            result_strings = []
+            for result in var:
+                result_strings.append(f"{result.content}\n")
+        
+            return '\n'.join(result_strings)
+        else:
+            try:
+                var = var.content
+                return var.content
+            except:
+                return var
     else:
-        var
+        return var
+
 
 
 # def custom_print(message, stdscr=None):
