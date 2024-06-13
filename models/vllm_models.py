@@ -5,7 +5,7 @@ from langchain_core.messages.human import HumanMessage
 class VllmJSONModel:
     def __init__(self, temperature=0, model="llama3:instruct", model_endpoint=None, guided_json=None, stop=None):
         self.headers = {"Content-Type": "application/json"}
-        self.model_endpoint = model_endpoint
+        self.model_endpoint = model_endpoint + 'v1/chat/completions'
         self.temperature = temperature
         self.model = model
         self.guided_json = guided_json
@@ -75,7 +75,7 @@ class VllmJSONModel:
 class VllmModel:
     def __init__(self, temperature=0, model="llama3:instruct", model_endpoint=None, stop=None):
         self.headers = {"Content-Type": "application/json"}
-        self.model_endpoint = model_endpoint
+        self.model_endpoint = model_endpoint + 'v1/chat/completions'
         self.temperature = temperature
         self.model = model
         self.stop = stop

@@ -1,233 +1,218 @@
-import yaml
-import os
+# import json
+# import yaml
+# import os
 from termcolor import colored
 from models.openai_models import get_open_ai, get_open_ai_json
 from models.ollama_models import OllamaModel, OllamaJSONModel
 from models.vllm_models import VllmJSONModel, VllmModel
+from models.groq_models import GroqModel, GroqJSONModel
+from models.claude_models import ClaudModel, ClaudJSONModel
+from models.gemini_models import GeminiModel, GeminiJSONModel
 from prompts.prompts import (
     planner_prompt_template,
-    researcher_prompt_template,
+    selector_prompt_template,
     reporter_prompt_template,
-    reviewer_prompt_template
+    reviewer_prompt_template,
+    router_prompt_template
 )
 from utils.helper_functions import get_current_utc_datetime, check_for_content
 from states.state import AgentGraphState
 
+class Agent:
+    def __init__(self, state: AgentGraphState, model=None, server=None, temperature=0, model_endpoint=None, stop=None, guided_json=None):
+        self.state = state
+        self.model = model
+        self.server = server
+        self.temperature = temperature
+        self.model_endpoint = model_endpoint
+        self.stop = stop
+        self.guided_json = guided_json
 
-def planner_agent(state:AgentGraphState, research_question, prompt=planner_prompt_template, model=None, feedback=None, previous_plans=None, server=None, guided_json=None, stop=None, model_endpoint=None):
-
-    feedback_value = feedback() if callable(feedback) else feedback
-    previous_plans_value = previous_plans() if callable(previous_plans) else previous_plans
-
-    feedback_value = check_for_content(feedback_value)
-    previous_plans_value = check_for_content(previous_plans_value)
-
-    planner_prompt = prompt.format(
-        feedback=feedback_value,
-        previous_plans=previous_plans_value,
-        datetime=get_current_utc_datetime()
-    )
-
-
-    messages = [
-        {"role": "system", "content": planner_prompt},
-        {"role": "user", "content": f"research question: {research_question}"}
-    ]
-
-    if server == 'openai':
-        llm = get_open_ai_json(model=model)
-    if server == 'ollama':
-        llm = OllamaJSONModel(model=model)
-    if server == 'vllm':
-        llm = VllmJSONModel(
-            model=model, 
-            guided_json=guided_json,
-            stop=stop,
-            model_endpoint=model_endpoint
+    def get_llm(self, json_model=True):
+        if self.server == 'openai':
+            return get_open_ai_json(model=self.model, temperature=self.temperature) if json_model else get_open_ai(model=self.model, temperature=self.temperature)
+        if self.server == 'ollama':
+            return OllamaJSONModel(model=self.model, temperature=self.temperature) if json_model else OllamaModel(model=self.model, temperature=self.temperature)
+        if self.server == 'vllm':
+            return VllmJSONModel(
+                model=self.model, 
+                guided_json=self.guided_json,
+                stop=self.stop,
+                model_endpoint=self.model_endpoint,
+                temperature=self.temperature
+            ) if json_model else VllmModel(
+                model=self.model,
+                model_endpoint=self.model_endpoint,
+                stop=self.stop,
+                temperature=self.temperature
             )
-
-    ai_msg = llm.invoke(messages)
-
-    response = ai_msg.content
-
-    state = {**state, "planner_response": response}
-
-    print(colored(f"Planner 👩🏿‍💻: {response}", 'cyan'))
-
-    return state
-
-def researcher_agent(state:AgentGraphState, research_question, prompt=researcher_prompt_template, model=None, feedback=None, previous_selections=None, serp=None, server=None, guided_json=None, stop=None, model_endpoint=None):
-
-    feedback_value = feedback() if callable(feedback) else feedback
-    previous_selections_value = previous_selections() if callable(previous_selections) else previous_selections
-
-    feedback_value = check_for_content(feedback_value)
-    previous_selections_value = check_for_content(previous_selections_value)
-
-    researcher_prompt = prompt.format(
-        feedback=feedback_value,
-        previous_selections=previous_selections_value,
-        serp=serp().content,
-        datetime=get_current_utc_datetime()
-    )
-
-    messages = [
-        {"role": "system", "content": researcher_prompt},
-        {"role": "user", "content": f"research question: {research_question}"}
-    ]
-
-    if server == 'openai':
-        llm = get_open_ai_json(model=model)
-    if server == 'ollama':
-        llm = OllamaJSONModel(model=model)
-    if server == 'vllm':
-        llm = VllmJSONModel(
-            model=model, 
-            model_endpoint=model_endpoint, 
-            guided_json=guided_json, 
-            stop=stop
+        if self.server == 'groq':
+            return GroqJSONModel(
+                model=self.model,
+                temperature=self.temperature
+            ) if json_model else GroqModel(
+                model=self.model,
+                temperature=self.temperature
             )
-
-    ai_msg = llm.invoke(messages)
-
-    response = ai_msg.content
-
-    print(colored(f"Researcher 🧑🏼‍💻: {response}", 'green'))
-
-    state = {**state, "researcher_response": response}
-
-    return state
-
-def reporter_agent(state:AgentGraphState, research_question, prompt=reporter_prompt_template, model=None, feedback=None, previous_reports=None, research=None, server=None, stop=None, model_endpoint=None):
-
-    feedback_value = feedback() if callable(feedback) else feedback
-    previous_reports_value = previous_reports() if callable(previous_reports) else previous_reports
-    research_value = research() if callable(research) else research
-
-    feedback_value = check_for_content(feedback_value)
-    previous_reports_value = check_for_content(previous_reports_value)
-    research_value = check_for_content(research_value)
-    
-    reporter_prompt = prompt.format(
-        feedback=feedback_value,
-        previous_reports=previous_reports_value,
-        datetime=get_current_utc_datetime(),
-        research=research_value
-    )
-
-    messages = [
-        {"role": "system", "content": reporter_prompt},
-        {"role": "user", "content": f"research question: {research_question}"}
-    ]
-
-    if server == 'openai':
-        llm = get_open_ai(model=model)
-    if server == 'ollama':
-        llm = OllamaModel(model=model)
-    if server == 'vllm':
-        llm = VllmModel(
-            model=model, 
-            model_endpoint=model_endpoint, 
-            stop=stop
+        if self.server == 'claude':
+            return ClaudJSONModel(
+                model=self.model,
+                temperature=self.temperature
+            ) if json_model else ClaudModel(
+                model=self.model,
+                temperature=self.temperature
             )
+        if self.server == 'gemini':
+            return GeminiJSONModel(
+                model=self.model,
+                temperature=self.temperature
+            ) if json_model else GeminiModel(
+                model=self.model,
+                temperature=self.temperature
+            )      
 
-    ai_msg = llm.invoke(messages)
+    def update_state(self, key, value):
+        self.state = {**self.state, key: value}
 
-    response = ai_msg.content
+class PlannerAgent(Agent):
+    def invoke(self, research_question, prompt=planner_prompt_template, feedback=None):
+        feedback_value = feedback() if callable(feedback) else feedback
+        feedback_value = check_for_content(feedback_value)
+
+        planner_prompt = prompt.format(
+            feedback=feedback_value,
+            datetime=get_current_utc_datetime()
+        )
+
+        messages = [
+            {"role": "system", "content": planner_prompt},
+            {"role": "user", "content": f"research question: {research_question}"}
+        ]
+
+        llm = self.get_llm()
+        ai_msg = llm.invoke(messages)
+        response = ai_msg.content
+
+        self.update_state("planner_response", response)
+        print(colored(f"Planner 👩🏿‍💻: {response}", 'cyan'))
+        return self.state
+
+class SelectorAgent(Agent):
+    def invoke(self, research_question, prompt=selector_prompt_template, feedback=None, previous_selections=None, serp=None):
+        feedback_value = feedback() if callable(feedback) else feedback
+        previous_selections_value = previous_selections() if callable(previous_selections) else previous_selections
+
+        feedback_value = check_for_content(feedback_value)
+        previous_selections_value = check_for_content(previous_selections_value)
+
+        selector_prompt = prompt.format(
+            feedback=feedback_value,
+            previous_selections=previous_selections_value,
+            serp=serp().content,
+            datetime=get_current_utc_datetime()
+        )
+
+        messages = [
+            {"role": "system", "content": selector_prompt},
+            {"role": "user", "content": f"research question: {research_question}"}
+        ]
+
+        llm = self.get_llm()
+        ai_msg = llm.invoke(messages)
+        response = ai_msg.content
+
+        print(colored(f"selector 🧑🏼‍💻: {response}", 'green'))
+        self.update_state("selector_response", response)
+        return self.state
+
+class ReporterAgent(Agent):
+    def invoke(self, research_question, prompt=reporter_prompt_template, feedback=None, previous_reports=None, research=None):
+        feedback_value = feedback() if callable(feedback) else feedback
+        previous_reports_value = previous_reports() if callable(previous_reports) else previous_reports
+        research_value = research() if callable(research) else research
+
+        feedback_value = check_for_content(feedback_value)
+        previous_reports_value = check_for_content(previous_reports_value)
+        research_value = check_for_content(research_value)
+        
+        reporter_prompt = prompt.format(
+            feedback=feedback_value,
+            previous_reports=previous_reports_value,
+            datetime=get_current_utc_datetime(),
+            research=research_value
+        )
+
+        messages = [
+            {"role": "system", "content": reporter_prompt},
+            {"role": "user", "content": f"research question: {research_question}"}
+        ]
+
+        llm = self.get_llm(json_model=False)
+        ai_msg = llm.invoke(messages)
+        response = ai_msg.content
+
+        print(colored(f"Reporter 👨‍💻: {response}", 'yellow'))
+        self.update_state("reporter_response", response)
+        return self.state
+
+class ReviewerAgent(Agent):
+    def invoke(self, research_question, prompt=reviewer_prompt_template, reporter=None, feedback=None):
+        reporter_value = reporter() if callable(reporter) else reporter
+        feedback_value = feedback() if callable(feedback) else feedback
+
+        reporter_value = check_for_content(reporter_value)
+        feedback_value = check_for_content(feedback_value)
+        
+        reviewer_prompt = prompt.format(
+            reporter=reporter_value,
+            state=self.state,
+            feedback=feedback_value,
+            datetime=get_current_utc_datetime(),
+        )
+
+        messages = [
+            {"role": "system", "content": reviewer_prompt},
+            {"role": "user", "content": f"research question: {research_question}"}
+        ]
+
+        llm = self.get_llm()
+        ai_msg = llm.invoke(messages)
+        response = ai_msg.content
+
+        print(colored(f"Reviewer 👩🏽‍⚖️: {response}", 'magenta'))
+        self.update_state("reviewer_response", response)
+        return self.state
     
-    print(colored(f"Reporter 👨‍💻: {response}", 'yellow'))
+class RouterAgent(Agent):
+    def invoke(self, feedback=None, research_question=None, prompt=router_prompt_template):
+        feedback_value = feedback() if callable(feedback) else feedback
+        feedback_value = check_for_content(feedback_value)
 
-    state = {**state, "reporter_response": response}
+        router_prompt = prompt.format(feedback=feedback_value)
 
-    return state
+        messages = [
+            {"role": "system", "content": router_prompt},
+            {"role": "user", "content": f"research question: {research_question}"}
+        ]
 
-def reviewer_agent(
-        state:AgentGraphState,
-        research_question,
-        prompt=reviewer_prompt_template, 
-        model=None, 
-        planner=None, 
-        researcher=None, 
-        reporter=None, 
-        planner_agent=None, 
-        researcher_agent=None, 
-        reporter_agent=None,
-        feedback=None,
-        serp=None,
-        server=None,
-        guided_json=None,
-        stop=None,
-        model_endpoint=None
-        ):
-    
-    planner_value = planner() if callable(planner) else planner
-    researcher_value = researcher() if callable(researcher) else researcher
-    reporter_value = reporter() if callable(reporter) else reporter
-    planner_agent_value = planner_agent
-    researcher_agent_value = researcher_agent
-    reporter_agent_value = reporter_agent
-    feedback_value = feedback() if callable(feedback) else feedback
+        llm = self.get_llm()
+        ai_msg = llm.invoke(messages)
+        response = ai_msg.content
 
-    planner_value = check_for_content(planner_value)
-    researcher_value = check_for_content(researcher_value)
-    reporter_value = check_for_content(reporter_value)
-    feedback_value = check_for_content(feedback_value)
-    
-    reviewer_prompt = prompt.format(
-        planner = planner_value,
-        researcher=researcher_value,
-        reporter=reporter_value,
-        planner_responsibilities=planner_agent_value,
-        researcher_responsibilities=researcher_agent_value,
-        reporter_responsibilities=reporter_agent_value,
-        feedback=feedback_value,
-        datetime=get_current_utc_datetime(),
-        serp=serp().content
-    )
+        print(colored(f"Router 🧭: {response}", 'blue'))
+        self.update_state("router_response", response)
+        return self.state
 
-    messages = [
-        {"role": "system", "content": reviewer_prompt},
-        {"role": "user", "content": f"research question: {research_question}"}
-    ]
+class FinalReportAgent(Agent):
+    def invoke(self, final_response=None):
+        final_response_value = final_response() if callable(final_response) else final_response
+        response = final_response_value.content
 
-    if server == 'openai':
-        llm = get_open_ai_json(model=model)
-    if server == 'ollama':
-        llm = OllamaJSONModel(model=model)
-    if server == 'vllm':
-        llm = VllmJSONModel(
-            model=model, 
-            guided_json=guided_json, 
-            stop=stop, 
-            model_endpoint=model_endpoint
-            )
+        print(colored(f"Final Report 📝: {response}", 'blue'))
+        self.update_state("final_reports", response)
+        return self.state
 
-
-    ai_msg = llm.invoke(messages)
-
-    response = ai_msg.content
-
-    print(colored(f"Reviewer 👩🏽‍⚖️: {response}", 'magenta'))
-
-    state = {**state, "reviewer_response": response}
-
-    return state
-
-
-def final_report(state:AgentGraphState, final_response=None):
-    final_response_value = final_response() if callable(final_response) else final_response
-
-    response = final_response_value.content
-
-    print(colored(f"Final Report 📝: {response}", 'blue'))
-
-    state = {**state, "final_reports": response}
-
-    return state
-
-def end_node(state:AgentGraphState):
-    state = {**state, "end_chain": "end_chain"}
-    return state
-
-
-    
+class EndNodeAgent(Agent):
+    def invoke(self):
+        self.update_state("end_chain", "end_chain")
+        return self.state

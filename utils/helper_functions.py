@@ -6,10 +6,26 @@ from textwrap import wrap
 
 # for loading configs to environment variables
 def load_config(file_path):
+    # Define default values
+    default_values = {
+        'SERPER_API_KEY': 'default_serper_api_key',
+        'OPENAI_API_KEY': 'default_openai_api_key',
+        'SERPER_API_KEY': 'default_groq_api_key',
+    }
+    
     with open(file_path, 'r') as file:
         config = yaml.safe_load(file)
         for key, value in config.items():
-            os.environ[key] = value
+            # If the value is empty or None, load the default value
+            if not value:
+                os.environ[key] = default_values.get(key, '')
+            else:
+                os.environ[key] = value
+# def load_config(file_path):
+#     with open(file_path, 'r') as file:
+#         config = yaml.safe_load(file)
+#         for key, value in config.items():
+#             os.environ[key] = value
 
 # for getting the current date and time in UTC
 def get_current_utc_datetime():

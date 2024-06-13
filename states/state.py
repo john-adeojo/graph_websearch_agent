@@ -5,9 +5,10 @@ from langgraph.graph.message import add_messages
 class AgentGraphState(TypedDict):
     research_question: str
     planner_response: Annotated[list, add_messages]
-    researcher_response: Annotated[list, add_messages]
+    selector_response: Annotated[list, add_messages]
     reporter_response: Annotated[list, add_messages]
     reviewer_response: Annotated[list, add_messages]
+    router_response: Annotated[list, add_messages]
     serper_response: Annotated[list, add_messages]
     scraper_response: Annotated[list, add_messages]
     final_reports: Annotated[list, add_messages]
@@ -23,13 +24,13 @@ def get_agent_graph_state(state:AgentGraphState, state_key:str):
         else:
             return state["planner_response"]
     
-    elif state_key == "researcher_all":
-        return state["researcher_response"]
-    elif state_key == "researcher_latest":
-        if state["researcher_response"]:
-            return state["researcher_response"][-1]
+    elif state_key == "selector_all":
+        return state["selector_response"]
+    elif state_key == "selector_latest":
+        if state["selector_response"]:
+            return state["selector_response"][-1]
         else:
-            return state["researcher_response"]
+            return state["selector_response"]
     
     elif state_key == "reporter_all":
         return state["reporter_response"]
@@ -69,9 +70,10 @@ def get_agent_graph_state(state:AgentGraphState, state_key:str):
 state = {
     "research_question":"",
     "planner_response": [],
-    "researcher_response": [],
+    "selector_response": [],
     "reporter_response": [],
     "reviewer_response": [],
+    "router_response": [],
     "serper_response": [],
     "scraper_response": [],
     "final_reports": [],

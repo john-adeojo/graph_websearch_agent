@@ -4,15 +4,15 @@ from agent_graph.graph import create_graph, compile_workflow
 # model = 'llama3:instruct'
 # model_endpoint = None
 
-# server = 'openai'
-# model = 'gpt-4o'
-# model_endpoint = None
+server = 'openai'
+model = 'gpt-4o'
+model_endpoint = None
 
-server = 'vllm'
-model = 'meta-llama/Meta-Llama-3-70B-Instruct' # full HF path
-runpod_endpoint = 'https://t3o6jzhg3zqci3-8000.proxy.runpod.net/' 
-model_endpoint = runpod_endpoint + 'v1/chat/completions'
-stop = "<|end_of_text|>"
+# server = 'vllm'
+# model = 'meta-llama/Meta-Llama-3-70B-Instruct' # full HF path
+# model_endpoint = 'https://kcpqoqtjz0ufjw-8000.proxy.runpod.net/' 
+# #model_endpoint = runpod_endpoint + 'v1/chat/completions'
+# stop = "<|end_of_text|>"
 
 iterations = 40
 
@@ -32,7 +32,7 @@ if __name__ == "__main__":
             break
 
         dict_inputs = {"research_question": query}
-        thread = {"configurable": {"thread_id": "4"}}
+        # thread = {"configurable": {"thread_id": "4"}}
         limit = {"recursion_limit": iterations}
 
         # for event in workflow.stream(

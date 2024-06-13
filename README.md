@@ -4,10 +4,8 @@
 ### Watch the Tutorial:
 [![Watch this video on YouTube](https://img.youtube.com/vi/R-o_a6dvzQM/0.jpg)](https://www.youtube.com/watch?v=R-o_a6dvzQM)
 
-
 ### Agent Schema:
 ![Agent Schema](schema_diagram/LanGraph.png)
-
 
 ### Prerequisites
 
@@ -50,8 +48,27 @@
 2. **Enter API Keys:**
    - **Serper API Key:** Get it from [https://serper.dev/](https://serper.dev/)
    - **OpenAI API Key:** Get it from [https://openai.com/](https://openai.com/)
+   - **Gemini API Key:** Get it from [https://ai.google.dev/gemini-api](https://ai.google.dev/gemini-api)
+   - **Claude API Key:** Get it from [https://docs.anthropic.com/en/api/getting-started](https://docs.anthropic.com/en/api/getting-started)
+   - **Groq API Key:** Get it from [https://console.groq.com/keys](https://console.groq.com/keys)
 
-### Run Your Query
+### Run the front end
+If you want to run the front end
+
+For Windows, run:
+```powershell
+cd app
+./run_windows.ps1
+```
+
+For Linux/macOS, run:
+```bash
+cd app
+chmod +x run_linux.sh
+./run_linux.sh
+```
+
+### Run Your Query In Shell
 ```bash
 python -m app.app
 ```
@@ -59,17 +76,17 @@ Then enter your query.
 
 ## If you want to work with Ollama
 
-
 ### Setup Ollama Server
 1. **Download Ollama:**
-   Download [https://ollama.com/download](Ollama)
+   Download [https://ollama.com/download](https://ollama.com/download)
 
 2. **Download an Ollama Model:**
    ```bash
    curl http://localhost:11434/api/pull -d "{\"name\": \"llama3\"}"
    ```
-Ollama[https://github.com/ollama/ollama/blob/main/docs/api.md#list-local-models](API documentionation)
+Ollama [API documentation](https://github.com/ollama/ollama/blob/main/docs/api.md#list-local-models)
 
 #### Video on how I integrated the Ollama Server:
 
 [![Watch the video](https://img.youtube.com/vi/tVcOU054iWA/0.jpg)](https://youtu.be/tVcOU054iWA)
+
