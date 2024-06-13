@@ -57,15 +57,13 @@ If you want to run the front end
 
 For Windows, run:
 ```powershell
-cd app
-./run_windows.ps1
+run_windows.ps1
 ```
 
 For Linux/macOS, run:
 ```bash
-cd app
 chmod +x run_linux.sh
-./run_linux.sh
+run_linux.sh
 ```
 
 ### Run Your Query In Shell
